@@ -2,10 +2,17 @@ package com.dagnaikuba;
 
 import java.util.Comparator;
 
-public class BoardComparator implements Comparator<Board>{
+public class BoardComparator implements Comparator<Board> {
 
-    public int compare(Board x, Board y){
-        return (x.getPriority()-y.getPriority()); //only matters if it is negative, positive or 0; the difference is redundant
+    public int compare(Board x, Board y) {
+        if (x.getPriority() != y.getPriority()) return x.getPriority() - y.getPriority(); //most cases
+
+        else if (x.emptyX != y.emptyX) {
+            return x.emptyX - y.emptyX;
+        }
+        else return x.emptyY - y.emptyY;
+
+
     }
 
 }

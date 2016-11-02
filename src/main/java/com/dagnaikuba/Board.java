@@ -2,6 +2,7 @@ package com.dagnaikuba;
 
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.Map;
 import java.util.Optional;
 
 public class Board{
@@ -22,6 +23,7 @@ public class Board{
     public int emptyY;
     public Order moveFromPreviousState = null;
     private int priority;
+    private int stepsFromOriginal;
 
     public Board(int size) {
         height = size;
@@ -42,14 +44,6 @@ public class Board{
         findAndSetEmpty();
     }
 
-    public int getPriority() {
-        return priority;
-    }
-
-    public void setPriority(int priority) {
-        this.priority = priority;
-    }
-
     public Board(int[][] _tiles, int emptyX, int emptyY, Order moveFromPreviousState) {
         tiles = _tiles;
         height = tiles.length;
@@ -58,6 +52,7 @@ public class Board{
         this.emptyY = emptyY;
         this.moveFromPreviousState = moveFromPreviousState;
     }
+
     public Board(int[][] _tiles, int emptyX, int emptyY, Order moveFromPreviousState, int priority) {
         tiles = _tiles;
         height = tiles.length;
@@ -67,7 +62,6 @@ public class Board{
         this.moveFromPreviousState = moveFromPreviousState;
         this.priority = priority;
     }
-
     public void initializeSolved() {
         int res[][] = new int[height][width];
         for (int i = 0; i < height; i++) {
@@ -80,9 +74,31 @@ public class Board{
         findAndSetEmpty();
     }
 
-    public void setBoard(int[][] _tiles) {
-        this.tiles = _tiles;
+    public static String TraceBack(Board backwardsBoard, Map<Board,Board> bmap){
+        StringBuilder movesDone = new StringBuilder();
+        while(bmap.get(backwardsBoard)!=null) {
 
+            switch (backwardsBoard.moveFromPreviousState) {
+                case U:
+                    movesDone.append("U");
+                    backwardsBoard = bmap.get(backwardsBoard);
+                    break;
+                case R:
+                    movesDone.append("R");
+                    backwardsBoard = bmap.get(backwardsBoard);
+                    break;
+                case D:
+                    movesDone.append("D");
+                    backwardsBoard = bmap.get(backwardsBoard);
+                    break;
+                case L:
+                    movesDone.append("L");
+                    backwardsBoard = bmap.get(backwardsBoard);
+                    break;
+
+            }
+        }
+        return movesDone.reverse().toString();
     }
     public  void printBoard(){
 
@@ -95,6 +111,7 @@ public class Board{
         }
         System.out.println("");
     }
+
     public static int[][] cloneArray(int[][] src) {
         int length = src.length;
         int[][] target = new int[length][src[0].length];
@@ -152,11 +169,9 @@ public class Board{
             default:
                 return Optional.empty();
         }
-
+        board.setStepsFromOriginal(stepsFromOriginal+1);
         return Optional.of(board);
     }
-
-
     //    }
     public boolean isSolved() {
         for (int i = 0; i < height; i++) {
@@ -168,6 +183,26 @@ public class Board{
             }
         }
         return true;
+    }
+    public int getPriority() {
+        return priority;
+    }
+
+
+    public void setPriority(int priority) {
+        this.priority = priority;
+    }
+
+    public void setBoard(int[][] _tiles) {
+        this.tiles = _tiles;
+
+    }
+
+    public int getStepsFromOriginal() {
+        return stepsFromOriginal;
+    }
+    public void setStepsFromOriginal(int stepsFromOriginal) {
+        this.stepsFromOriginal = stepsFromOriginal;
     }
 
     @Override

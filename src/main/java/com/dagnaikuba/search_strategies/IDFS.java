@@ -12,7 +12,6 @@ public final class IDFS {
     public static String idfs(Board b, List<Order> order) {
         counter = 0;
 
-        StringBuilder movesDone = new StringBuilder();
         Map<Board, Board> bmap = new HashMap<>();
 
 
@@ -31,32 +30,7 @@ public final class IDFS {
         //  BoardView.printBoard(pop);
 
 
-        Board backwardsBoard = solution;
-        while(bmap.get(backwardsBoard)!=null) {
-
-            switch (backwardsBoard.moveFromPreviousState) {
-                case U:
-                    movesDone.append("U");
-                    backwardsBoard = bmap.get(backwardsBoard);
-                    break;
-                case R:
-                    movesDone.append("R");
-                    backwardsBoard = bmap.get(backwardsBoard);
-                    break;
-                case D:
-                    movesDone.append("D");
-                    backwardsBoard = bmap.get(backwardsBoard);
-                    break;
-                case L:
-                    movesDone.append("L");
-                    backwardsBoard = bmap.get(backwardsBoard);
-                    break;
-
-            }
-        }
-
-        movesDone.reverse();
-        return movesDone.toString();
+        return Board.TraceBack(solution,bmap);
 
     }
 

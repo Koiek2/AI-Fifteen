@@ -24,12 +24,12 @@ public class Application {
 
 
         List<Order> orders = new ArrayList<>();
-        orders.add(Order.R);
         orders.add(Order.D);
+        orders.add(Order.R);
         orders.add(Order.U);
         orders.add(Order.L);
 
-        String bfsString = IDFS.idfs(board,orders);
+        String bfsString = AStar.aStar(board, "MISPLACED_TILES");
         System.out.println(bfsString.length());
         System.out.println(bfsString);
 

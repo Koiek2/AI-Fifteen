@@ -10,63 +10,34 @@ public final class DFS {
 
     public static String dfs(Board b, List<Order> order) {
 
-
-        StringBuilder movesDone = new StringBuilder();
         Order next;
 
         Stack<Board> stack = new Stack<>();
         Map<Board, Board> bmap = new HashMap<>();
 
-        bmap.put(b,null);
+        bmap.put(b, null);
         stack.push(b);
 
 
         int counter = 0;
         while (true) {
 
-            if (stack.isEmpty()||counter>5000000) return new String("");
+            if (stack.isEmpty() || counter > 5000000) return new String("");
 
             Board popPrepare = stack.pop();
 
             Board pop = new Board(Board.cloneArray(popPrepare.tiles), popPrepare.emptyX, popPrepare.emptyY, popPrepare.moveFromPreviousState);
             if (pop.isSolved()) {
-                            System.out.println("found it!");
-                            System.out.println(counter);
-                            //  BoardView.printBoard(pop);
+                System.out.println("found it!");
+                System.out.println(counter);
+                //  BoardView.printBoard(pop);
 
-
-                            Board backwardsBoard = pop;
-                            while(bmap.get(backwardsBoard)!=null) {
-
-                                switch (backwardsBoard.moveFromPreviousState) {
-                                    case U:
-                                        movesDone.append("U");
-                                        backwardsBoard = bmap.get(backwardsBoard);
-                                        break;
-                                    case R:
-                                        movesDone.append("R");
-                                        backwardsBoard = bmap.get(backwardsBoard);
-                                        break;
-                                    case D:
-                                        movesDone.append("D");
-                                        backwardsBoard = bmap.get(backwardsBoard);
-                                        break;
-                                    case L:
-                                        movesDone.append("L");
-                                        backwardsBoard = bmap.get(backwardsBoard);
-                                        break;
-
-                    }
-                }
-                break;
+                return Board.TraceBack(pop, bmap);
 
             }
+
             counter++;
 
-            Optional<Board> up = pop.move(Order.U);
-            Optional<Board> right = pop.move(Order.R);
-            Optional<Board> down = pop.move(Order.D);
-            Optional<Board> left = pop.move(Order.L);
 
             boolean isRandom = order.get(0).equals(Order.Rand);
             List<Order> currentOrder;
@@ -90,30 +61,29 @@ public final class DFS {
                 next = currentOrder.get(j);
                 switch (next) {
                     case U:
-                        pushIfPresent(up,pop,bmap, stack);
+                        pushIfPresent(pop.move(Order.U), pop, bmap, stack);
                         break;
                     case R:
-                        pushIfPresent(right,pop, bmap, stack);
+                        pushIfPresent(pop.move(Order.R), pop, bmap, stack);
                         break;
                     case D:
-                        pushIfPresent(down, pop,bmap, stack);
+                        pushIfPresent(pop.move(Order.D), pop, bmap, stack);
                         break;
                     case L:
-                        pushIfPresent(left,pop, bmap, stack);
+                        pushIfPresent(pop.move(Order.L), pop, bmap, stack);
                         break;
 
 
                 }
             }
+
         }
-        movesDone.reverse();
-        return movesDone.toString();
 
     }
 
     public static void pushIfPresent(Optional<Board> b, Board prev, Map map, Stack<Board> stack) {
-        if (b.isPresent() && !map.containsKey(b.get())){
-            map.put(b.get(),prev);
+        if (b.isPresent() && !map.containsKey(b.get())) {
+            map.put(b.get(), prev);
             stack.push((b.get()));
         }
     }

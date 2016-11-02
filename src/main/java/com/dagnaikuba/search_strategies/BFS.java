@@ -10,7 +10,7 @@ public final class BFS {
     public static String bfs(Board b, List<Order> order) {
 
 
-        StringBuilder movesDone = new StringBuilder();
+        String movesDone;
         Order next;
 
         Queue<Board> queue = new LinkedList<>();
@@ -31,44 +31,12 @@ public final class BFS {
 
             Board remove = new Board(Board.cloneArray(removePrepare.tiles), removePrepare.emptyX, removePrepare.emptyY, removePrepare.moveFromPreviousState);
             if (remove.isSolved()) {
-                System.out.println("found it!");
+                System.out.println("found it! in tries: " );
                 System.out.println(counter);
                 //  BoardView.printBoard(remove);
-
-
-                Board backwardsBoard = remove;
-                while(bmap.get(backwardsBoard)!=null) {
-
-                    switch (backwardsBoard.moveFromPreviousState) {
-                        case U:
-                            movesDone.append("U");
-                            backwardsBoard = bmap.get(backwardsBoard);
-                            break;
-                        case R:
-                            movesDone.append("R");
-                            backwardsBoard = bmap.get(backwardsBoard);
-                            break;
-                        case D:
-                            movesDone.append("D");
-                            backwardsBoard = bmap.get(backwardsBoard);
-                            break;
-                        case L:
-                            movesDone.append("L");
-                            backwardsBoard = bmap.get(backwardsBoard);
-                            break;
-
-                    }
-                }
-
-                break;
-
+               return  Board.TraceBack(remove,bmap);
             }
             counter++;
-
-            Optional<Board> up = remove.move(Order.U);
-            Optional<Board> right = remove.move(Order.R);
-            Optional<Board> down = remove.move(Order.D);
-            Optional<Board> left = remove.move(Order.L);
 
             boolean isRandom = order.get(0).equals(Order.Rand);
             List<Order> currentOrder;
@@ -92,24 +60,22 @@ public final class BFS {
                 next = currentOrder.get(j);
                 switch (next) {
                     case U:
-                        addIfPresent(up,remove,bmap, queue);
+                        addIfPresent(remove.move(Order.U),remove,bmap, queue);
                         break;
                     case R:
-                        addIfPresent(right,remove, bmap, queue);
+                        addIfPresent(remove.move(Order.R),remove, bmap, queue);
                         break;
                     case D:
-                        addIfPresent(down, remove,bmap, queue);
+                        addIfPresent(remove.move(Order.D), remove,bmap, queue);
                         break;
                     case L:
-                        addIfPresent(left,remove, bmap, queue);
+                        addIfPresent(remove.move(Order.L),remove, bmap, queue);
                         break;
 
 
                 }
             }
         }
-        movesDone.reverse();
-        return movesDone.toString();
 
     }
 
