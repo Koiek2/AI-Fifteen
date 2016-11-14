@@ -1,7 +1,10 @@
 package com.dagnaikuba;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -23,18 +26,30 @@ public class Board{
     public int emptyY;
     public Order moveFromPreviousState = null;
     private int priority;
+    public int bestForgottenSuccessorPriority=-1;
     private int stepsFromOriginal;
+    public int depth;
+    public List<Board> successors;
+    public List<Order> ordersUsed;
+    public Map<Board,State> successorsState = new HashMap<>();
+   // public State state;
+    
+    public Board(){}
 
     public Board(int size) {
         height = size;
         width = size;
         tiles = new int[size][size];
+        successors = new ArrayList<>();
+        ordersUsed = new ArrayList<>();
     }
 
     public Board(int height, int width) {
         this.height = height;
         this.width = width;
         tiles = new int[height][width];
+        successors = new ArrayList<>();
+        ordersUsed = new ArrayList<>();
     }
 
     public Board(int[][] _tiles) {
@@ -42,6 +57,8 @@ public class Board{
         height = tiles.length;
         width = tiles[0].length;
         findAndSetEmpty();
+        successors = new ArrayList<>();
+        ordersUsed = new ArrayList<>();
     }
 
     public Board(int[][] _tiles, int emptyX, int emptyY, Order moveFromPreviousState) {
@@ -51,6 +68,8 @@ public class Board{
         this.emptyX = emptyX;
         this.emptyY = emptyY;
         this.moveFromPreviousState = moveFromPreviousState;
+        successors = new ArrayList<>();
+        ordersUsed = new ArrayList<>();
     }
 
     public Board(int[][] _tiles, int emptyX, int emptyY, Order moveFromPreviousState, int priority) {
@@ -61,6 +80,8 @@ public class Board{
         this.emptyY = emptyY;
         this.moveFromPreviousState = moveFromPreviousState;
         this.priority = priority;
+        successors = new ArrayList<>();
+        ordersUsed = new ArrayList<>();
     }
     public void initializeSolved() {
         int res[][] = new int[height][width];
@@ -120,6 +141,29 @@ public class Board{
         }
         return target;
     }
+    
+    public Board clone() {
+		Board clonedNode = new Board(height,width);
+		for (int i = 0 ; i < height ; ++i) {
+			for (int j = 0 ; j < width ; ++j) {
+				clonedNode.tiles[i][j] = tiles[i][j];
+			}
+		}
+		clonedNode.emptyX = emptyX;
+		clonedNode.emptyY = emptyY;		
+		clonedNode.depth=depth;
+		clonedNode.moveFromPreviousState=moveFromPreviousState;
+		clonedNode.bestForgottenSuccessorPriority=bestForgottenSuccessorPriority;
+		clonedNode.priority=priority;
+		clonedNode.stepsFromOriginal = stepsFromOriginal;
+		clonedNode.successors=successors;
+		clonedNode.ordersUsed=ordersUsed;
+		clonedNode.successorsState=successorsState;
+
+		
+		return clonedNode;
+	}
+    
     public void findAndSetEmpty() {
         for (int i = 0; i < height; i++) {
             for (int j = 0; j < width; j++) {
@@ -172,7 +216,19 @@ public class Board{
         board.setStepsFromOriginal(stepsFromOriginal+1);
         return Optional.of(board);
     }
-    //    }
+
+    public int calculatePossibleSteps(){
+    	if((emptyX == 0 & emptyY == 0) || (emptyX == 0 & emptyY == width - 1) || (emptyX == height - 1 & emptyY == 0) || (emptyX == height - 1 & emptyY == width - 1)){
+    		return 2;
+    	}
+    	else if(emptyX == 0 || emptyY == 0 || emptyX == height - 1 || emptyY == width - 1){
+    		return 3;
+    	}
+    	else{
+    		return 4;
+    	}
+    }
+    
     public boolean isSolved() {
         for (int i = 0; i < height; i++) {
             for (int j = 0; j < width; j++) {
@@ -219,5 +275,14 @@ public class Board{
     @Override
     public int hashCode() {
         return Arrays.deepHashCode(tiles);
+    }
+    
+    public boolean tilesEqual(Board b){
+    	for(int i=0;i<height;i++){
+    		for(int j=0;j<width;j++){
+    			if(this.tiles[i][j]!=b.tiles[i][j]) return false;
+    		}
+    	}
+    	return true;
     }
 }

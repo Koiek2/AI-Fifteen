@@ -20,9 +20,9 @@ public final class DFS {
 
 
         int counter = 0;
-        while (true) {
+        while (true) { //while(stack.size()>0)
 
-            if (stack.isEmpty() || counter > 5000000) return new String("");
+            if (stack.isEmpty() || counter > 5000000) return new String(""); //bez stack.isEmpty()
 
             Board popPrepare = stack.pop();
 
@@ -81,7 +81,7 @@ public final class DFS {
 
     }
 
-    public static void pushIfPresent(Optional<Board> b, Board prev, Map map, Stack<Board> stack) {
+    public static void pushIfPresent(Optional<Board> b, Board prev, Map map, Stack<Board> stack) { //po co?
         if (b.isPresent() && !map.containsKey(b.get())) {
             map.put(b.get(), prev);
             stack.push((b.get()));

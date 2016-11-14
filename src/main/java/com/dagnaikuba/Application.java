@@ -29,9 +29,18 @@ public class Application {
         orders.add(Order.U);
         orders.add(Order.L);
 
-        String bfsString = AStar.aStar(board, "MISPLACED_TILES");
+//        String bfsString = AStar.aStar(board, "MISPLACED_TILES");
+//        System.out.println(bfsString.length());
+//        System.out.println(bfsString);
+        
+        String smaString = SMAStar.smaStar(board, "MISPLACED_TILES", 5);
+        System.out.println("solution length " + smaString.length());
+        System.out.println(smaString);
+        
+        /*String bfsString = IDFS.idfs(board, orders);
         System.out.println(bfsString.length());
-        System.out.println(bfsString);
+        System.out.println(bfsString);*/
+        
 
 
 //        String dfsString = com.dagnaikuba.DFSegies.DFS.dfs(board,orders);
