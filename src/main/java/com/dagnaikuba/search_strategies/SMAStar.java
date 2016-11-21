@@ -20,7 +20,7 @@ public class SMAStar {
 
 
         PriorityQueue<Board> queue = new PriorityQueue<>(new SMAComparator());
-        PriorityQueue<Board> leafList = new PriorityQueue<>(new SMAComparator().reversed());
+        //PriorityQueue<Board> leafList = new PriorityQueue<>(new SMAComparator().reversed());
         
         Map<Board, Board> bmap = new HashMap<>();
 
@@ -28,6 +28,7 @@ public class SMAStar {
         b.setPriority(Evaluator.evaluate(b, heuristic));
         b.setStepsFromOriginal(0);
         queue.add(b);
+        System.out.println("added 0");
         int counter = 0;
         b.depth=0;
         while (true) {
@@ -36,8 +37,6 @@ public class SMAStar {
             Board currentNodePrepare = queue.peek();
             Board currentNode = currentNodePrepare.clone();
 
-            //System.out.println("currentNode");
-            //currentNode.printBoard();
             if (currentNode.isSolved()) {
                 System.out.println("found it!");
                 System.out.println("counter " + counter);
@@ -45,6 +44,15 @@ public class SMAStar {
             }
 
             counter++;
+            /*if(counter>5000000){
+            	//break;
+            	return "";
+            	
+            }*/
+            
+            if(checkIfDone(queue)){
+            	return "";
+            }
             
             Board successor=new Board();                      
             List<Order> orders = new ArrayList<>();
@@ -57,7 +65,7 @@ public class SMAStar {
             while(i<orders.size() && moveDone!=true) //make a move if legal and not yet made
             {
             	if(!currentNode.ordersUsed.contains(orders.get(i))){
-                	successor = setSuccessorPriority(orders.get(i), maxDepth, currentNode, bmap, queue, heuristic,leafList);
+                	successor = setSuccessorPriority(orders.get(i), maxDepth, currentNode, bmap, queue, heuristic);//,leafList);
                 	currentNode.ordersUsed.add(orders.get(i));
 
                 	if(successor!=null ){ //move was made
@@ -68,52 +76,52 @@ public class SMAStar {
             }
             
             if(!moveDone){ //no more moves possible from this node - remove from queue
-            	successor=null;
+            	successor=null;    	
             	queue.remove(currentNode);
             }
             
-            //czy to jest to samo o wyzej?
-            if(currentNode.successors.size()==currentNode.calculatePossibleSteps()){
-	            if (queue.containsAll(currentNode.successors)){ 
-	            	queue.remove(currentNode);
-	            	System.out.println("usuwam");
-	            }
-            }
             
             if(successor==null) { //if no new successor - choose another parent node (omit the rest of the loop)
-            	System.out.println("successor to nunll");
+            	System.out.println("successor to null");
             	continue;
             }
-            
-//          drukowanko successora
-//          else{
-//             System.out.println("successor");
-//             successor.printBoard();
-//          }
-            
+                 
 
 //          if such a board was obtained earlier through some other steps - choose better path to it
             boolean sameExists = false;
             for(Board board : queue){
             	if(board.tilesEqual(successor)) {
-            		int boardPriority = Evaluator.evaluate(board, heuristic) + board.getStepsFromOriginal();
-            		int successorPriority =Evaluator.evaluate(successor, heuristic) + successor.getStepsFromOriginal(); 
-            		if(successorPriority>boardPriority){
+            		int boardPriority = board.getStepsFromOriginal();
+            		int successorPriority =successor.getStepsFromOriginal(); 
+            		System.out.println("board priority  " + boardPriority);
+            		System.out.println("successor priority  " + successorPriority);
+            		if(successorPriority>=boardPriority){
             			currentNode.successorsState.put(successor, State.blocked);
+            			currentNode.successors.add(successor);
             			Board currentNodeParent = bmap.get(currentNode);
-            			if(checkIfAllSuccessorsBlocked(currentNodeParent)){
-            				currentNodeParent.setPriority(Integer.MAX_VALUE);
+            			if(currentNodeParent!=null){
+	            			System.out.println(currentNodeParent.depth);
+	            			System.out.println("children "+ currentNodeParent.successors.size());
+	            			if(checkIfAllSuccessorsBlocked(currentNodeParent)){
+	            				currentNodeParent.setPriority(Integer.MAX_VALUE);
+	            			}
             			}
             		}
             		else{
             			queue.add(successor);
+            			System.out.println("added 1");
             			queue.remove(board);
-            			leafList.remove(board);
+            			//leafList.remove(board);
+            			currentNode.successors.add(successor);
+            			currentNode.successorsState.put(successor, State.exists);
             			Board boardParent = bmap.get(board);
-            			boardParent.successors.remove(board);
-            			boardParent.successorsState.put(successor, State.blocked);
-            			if(checkIfAllSuccessorsBlocked(boardParent)){
-            				boardParent.setPriority(Integer.MAX_VALUE);
+            			if(boardParent!=null){
+	            			System.out.println(board.depth);
+	            			boardParent.successors.remove(board);
+	            			boardParent.successorsState.put(successor, State.blocked);
+	            			if(checkIfAllSuccessorsBlocked(boardParent)){
+	            				boardParent.setPriority(Integer.MAX_VALUE);
+	            			}
             			}
             			
             		}
@@ -122,17 +130,37 @@ public class SMAStar {
             }
             if(!sameExists){
             	queue.add(successor);
-            	leafList.remove(currentNode);
+            	System.out.println("added 2");
+            	//leafList.remove(currentNode);
+            	currentNode.successors.add(successor);
+            	currentNode.successorsState.put(successor, State.exists);
+            	//leafList.add(successor);
             }
             
            
-//			if all the children are known update priority
+//			if all the children are known update priority (if all children are currently in the queue we take lowest cost child, 
+            //if not (but they were generated, we have to compare lowest cost child to best forgotten successor
             if(currentNode.successorsState.size()==currentNode.calculatePossibleSteps()){ ///czy tylko dzieci w drzewie czy wszystkie?
             	if(currentNode.successors.size()==currentNode.successorsState.size()){
             		currentNode.setPriority(chooseLowestCostChild(currentNode).getPriority());
+            		currentNode.bestForgottenSuccessorPriority=-1; 
+            		while(bmap.get(currentNode)!=null){
+	            		Board parent = bmap.get(currentNode);
+	            		if(parent.getPriority()>currentNode.getPriority()){
+	            			parent.setPriority(currentNode.getPriority());
+	            		}
+	            		currentNode=parent;
+            		}
             	}
             	else{
             		currentNode.setPriority(Math.min(currentNode.bestForgottenSuccessorPriority,chooseLowestCostChild(currentNode).getPriority()));
+            		while(bmap.get(currentNode)!=null){
+	            		Board parent = bmap.get(currentNode);
+	            		if(parent.getPriority()>currentNode.getPriority()){
+	            			parent.setPriority(currentNode.getPriority());
+	            		}
+	            		currentNode=parent;
+            		}
             	}
             }
             
@@ -142,13 +170,27 @@ public class SMAStar {
             //if number of nodes in a queue reaches the maxdepth value - remove the least promissing leaf
             if(queue.size()==maxDepth){
             	System.out.println("max depth reached");
-            	forgetLeaf(leafList,queue,bmap);
+            	//forgetLeaf(leafList,queue,bmap);
+            	forgetLeaf(queue,bmap);
+            	
             }        
         }
+        
+       
 		
 
 
     }
+	
+	public static boolean checkIfDone(Queue<Board> queue){
+		for(Board b : queue){
+			if(b.successorsState.size()!=b.calculatePossibleSteps())
+			{
+				return false;
+			}
+		}
+		return true;
+	}
 	
 	public static boolean checkIfAllSuccessorsBlocked(Board boardParent){
 		for(State state : boardParent.successorsState.values()){
@@ -157,33 +199,53 @@ public class SMAStar {
 		return true;
 	}
 	
-	public static void forgetLeaf(Queue<Board> leafList, Queue<Board> queue, Map<Board,Board> bmap){
+	public static Queue<Board> getLeafs(Queue<Board> queue){
+		Queue<Board> leafs=new PriorityQueue<>(new SMAComparator().reversed());
+		for(Board b : queue){
+			if(b.successors.size()==0){
+				leafs.add(b);
+			}
+		}
+		return leafs;
+	}
+	
+	public static void forgetLeaf(Queue<Board> queue, Map<Board,Board> bmap){
 		//jak najwiekszy depth, jak najwieksze priority
-		System.out.println("leaflist size" + leafList.size());
-		for(Board b : leafList){
-    		b.printBoard();
-    		System.out.println("priority " + b.getPriority());
-    		System.out.println("successors number in queue " +b.successors.size());
-    		System.out.println("depth " + b.depth);
-    	}
-    	Board badNode = leafList.remove();
+		//System.out.println("leaflist size" + leafList.size());
+//		for(Board b : leafList){
+//    		b.printBoard();
+//    		System.out.println("priority " + b.getPriority());
+//    		System.out.println("successors number in queue " +b.successors.size());
+//    		System.out.println("depth " + b.depth);
+//    	}
+    	Board badNode = getLeafs(queue).remove();
     	queue.remove(badNode);
     	System.out.println("queue.size after remove" + queue.size());
     	Board badNodeParent = bmap.get(badNode);
     	//if not yet set or bigger than new one
-    	if(badNodeParent.bestForgottenSuccessorPriority==-1 || badNodeParent.bestForgottenSuccessorPriority>badNode.getPriority()){
-    		badNodeParent.bestForgottenSuccessorPriority=badNode.getPriority();
-    	}
-    	badNodeParent.successors.remove(badNode);
-    	badNodeParent.successorsState.put(badNode, State.forgotten);
+    	System.out.println("leafs " + getLeafs(queue).size());
+    	System.out.println("bad node depth "+badNode.depth);
     	
-    	if(badNodeParent.successors.isEmpty()){
-    		leafList.add(badNodeParent);
+    	if(badNodeParent!=null){
+	    	System.out.println("badnodeparent depth "+badNodeParent.depth);
+	    	System.out.println("badnodeparent best forgotten "+badNodeParent.bestForgottenSuccessorPriority);
+	    	if(badNodeParent.bestForgottenSuccessorPriority==-1 || badNodeParent.bestForgottenSuccessorPriority>badNode.getPriority()){
+	    		badNodeParent.bestForgottenSuccessorPriority=badNode.getPriority();
+	    	}
+	    	badNodeParent.successors.remove(badNode);
+	    	badNodeParent.successorsState.put(badNode, State.forgotten);
+	    	
+	    	if(badNodeParent.successors.isEmpty()){
+	    		//leafList.add(badNodeParent);
+	    	}
+	
+	    	/*if (!queue.contains(badNodeParent)) {
+	    		queue.add(badNodeParent); 
+	    		System.out.println("added p");
+	    	}*/
     	}
-
-    	if (!queue.contains(badNodeParent)) {
-    		queue.add(badNodeParent); 
-    	}
+    	
+    	
 	}
 	
 	public static Board chooseLowestCostChild(Board parent){
@@ -199,25 +261,25 @@ public class SMAStar {
 	}
 
 
-	 public static Optional<Board> evaluateAndAddIfPresent(Optional<Board> b, Board prev, Map map, Queue<Board> queue, String heuristic, Queue<Board> leafList) {
+	 public static Optional<Board> evaluateAndAddIfPresent(Optional<Board> b, Board prev, Map map, Queue<Board> queue, String heuristic){//, Queue<Board> leafList) {
 	        if (b.isPresent()) {
 	            Board board = b.get();
 	            if (!map.containsKey(board)) {
 	                board.setPriority(Evaluator.evaluate(board, heuristic) + board.getStepsFromOriginal()); //A star magic happens here
 	                map.put(b.get(), prev);
 	                //queue.add((b.get()));
-	                prev.successors.add(board);
+	               // prev.successors.add(board);
 	                System.out.println("successor added");
-	                leafList.remove(prev);
-	                leafList.add(board);
+	                //leafList.remove(prev);
+//	                leafList.add(board);
 	                board.depth=prev.depth+1;
 	            }    
 	        }
 	        return b;
 	    }
 	 
-	 public static Board setSuccessorPriority(Order order, int maxDepth, Board parentBoard, Map bmap, Queue<Board> queue, String heuristic, Queue<Board> leafList){
-		 Optional<Board> successorOpt = evaluateAndAddIfPresent(parentBoard.move(order), parentBoard, bmap, queue, heuristic,leafList);
+	 public static Board setSuccessorPriority(Order order, int maxDepth, Board parentBoard, Map bmap, Queue<Board> queue, String heuristic){//, Queue<Board> leafList){
+		 Optional<Board> successorOpt = evaluateAndAddIfPresent(parentBoard.move(order), parentBoard, bmap, queue, heuristic);//,leafList);
 		 if (successorOpt.isPresent()) {
              Board successor = successorOpt.get();
              if(!successor.isSolved() && queue.size()==maxDepth){ 

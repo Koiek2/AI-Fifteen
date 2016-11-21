@@ -9,13 +9,30 @@ public class Application {
 
 
     public static void main(String[] args) {
-        Board board = new Board(3);
-        board.initializeSolved();
-
-
-        board = board.move(Order.U).get();
-        board = board.move(Order.L).get();
-        board = board.move(Order.L).get();
+        //input: 3 3 2 4 3 1 0 5 7 8 6
+    	if(args.length==0){
+        	System.out.println("No input!");
+        	return;
+        }
+    	
+    	else if(args.length!=(Integer.parseInt(args[0])*Integer.parseInt(args[1]))+2){
+        	System.out.println("wrong input");
+        	return;
+        }
+           
+        int boardRows = Integer.parseInt(args[0]);
+        int boardCols = Integer.parseInt(args[1]);
+        int[][] tiles = new int[boardRows][boardCols];
+        
+        int k=2;
+        for(int i=0;i<boardRows;i++){
+        	for(int j=0;j<boardCols;j++){
+        		tiles[i][j]=Integer.parseInt(args[k]);
+        		k++;
+        	}
+        }
+        
+        Board board = new Board(tiles);
 
         board.moveFromPreviousState = null;
 
@@ -33,9 +50,14 @@ public class Application {
 //        System.out.println(bfsString.length());
 //        System.out.println(bfsString);
         
-        String smaString = SMAStar.smaStar(board, "MISPLACED_TILES", 5);
-        System.out.println("solution length " + smaString.length());
-        System.out.println(smaString);
+        String smaString = SMAStar.smaStar(board, "MISPLACED_TILES", 4);
+        if(smaString.length()!=0){
+        	System.out.println("solution length " + smaString.length());        
+        	System.out.println(smaString);
+        }
+        else{
+        	System.out.println("no solution was found");
+        }
         
         /*String bfsString = IDFS.idfs(board, orders);
         System.out.println(bfsString.length());

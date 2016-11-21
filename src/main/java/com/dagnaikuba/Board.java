@@ -29,7 +29,7 @@ public class Board{
     public int bestForgottenSuccessorPriority=-1;
     private int stepsFromOriginal;
     public int depth;
-    public List<Board> successors;
+    public List<Board> successors = new ArrayList<>();
     public List<Order> ordersUsed;
     public Map<Board,State> successorsState = new HashMap<>();
    // public State state;
